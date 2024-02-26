@@ -9,15 +9,15 @@ echo | ls -la
 # collective size of each file type
 echo File types and Collective size:
 # file to determine file type
-#COUNT=$( find . -maxdepth 1 -type d | wc -l )
-#for a in $( seq 1 ${COUNT} ) ; do
-#    cd subdirectory_$a
-#    echo | wc -l
-#    echo subdirectory_$a
-#    cd ..
-#done
+COUNT=$( find . -maxdepth 1 -type d | wc -l )
+for a in $( seq 1 ${COUNT} ) ; do
+    cd subdirectory_$a
+    echo | wc -l
+    echo subdirectory_$a
+    cd ..
+done
 
-wc -l $( find . '{.*directory_[0-9]}\b^.') # needs regex expression
+#wc -l $( find -type d -iregex '[a-z]*\bsubdirectory_\b[0-9]^[.]$') # needs regex expression
 echo
 
 # For each child directory, specify total space used, in human readable format
