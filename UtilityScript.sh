@@ -13,6 +13,7 @@ echo $'\n\n'
 # For each child directory, report how many of each file type there are and
 # collective size of each file type
 
+# might need for loop? for file in directory
 
 # Sort files
 # if first file does not contain .
@@ -63,9 +64,8 @@ echo TO BE IMPLEMENTED
 # get each directory
 # get file in each directory
 
-
-ls $(find . -type d)| wc -m * | sort -n | head -n 1
-ls $(find . -type d)| wc -m * | sort -n | tail -n 1
+ls -f $(find . -type d) | wc -m  | sort -n | head -n 1
+#ls $(find . -type d)| wc -m * | sort -n | tail -n 1
 echo
 
 # ---------------------------------------------------------------------------------
