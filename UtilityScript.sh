@@ -46,10 +46,12 @@ echo $'\n\n'
 
 # ls -sh for space used
 # if file contains directories list sub directories too
+# took inspiration from listing vs finding in 2.8 finding things NOS workbook
 
 echo Child Directories and space used:
 
-ls -d | ls -sh
+echo
+ls -shd $(find . -type d)
 echo 
 
 # ---------------------------------------------------------------------------------
