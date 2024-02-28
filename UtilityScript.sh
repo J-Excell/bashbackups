@@ -12,14 +12,16 @@ echo $'\n\n'
 # For each child directory, report how many of each file type there are and
 # collective size of each file type
 echo File types and Collective size:
-# file to determine file type
+# ls -X sorts files by extension category
+
 COUNT=$( find . -maxdepth 1 -type d | wc -l )
 for a in $( seq 1 $((${COUNT}-1)) ) ; do
     echo subdirectory_$a
+    ls subdirectory_$a -X 
     echo | ls subdirectory_$a | wc -l 
+    echo
 done
 
-#wc -l $( find -type d -iregex '[a-z]*\bsubdirectory_\b[0-9]^[.]$') # needs regex expression
 echo $'\n\n'
 # ---------------------------------------------------------------------------------
 
