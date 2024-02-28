@@ -26,13 +26,7 @@ echo $'\n\n'
 echo File types and Collective size:
 # ls -X sorts files by extension category
 
-COUNT=$( find . -maxdepth 1 -type d | wc -l )
-for a in $( seq 1 $((${COUNT}-1)) ) ; do
-    echo subdirectory_$a
-    ls subdirectory_$a -X 
-    echo | ls subdirectory_$a | wc -l 
-    echo
-done
+$(find . -type f $(find . -type d))
 
 echo $'\n\n'
 
@@ -54,6 +48,7 @@ echo
 ls -shd $(find . -type d)
 echo 
 
+
 # ---------------------------------------------------------------------------------
 
 ###################################################################################
@@ -63,6 +58,14 @@ echo
 echo TO BE IMPLEMENTED
 # wc -l * | sort -n | head -n 3
 # Gets the 3 files with least lines (Pipes and Filters NOS workbook)
+# get characters in line?? wc -m
+
+# get each directory
+# get file in each directory
+
+
+ls $(find . -type d)| wc -m * | sort -n | head -n 1
+ls $(find . -type d)| wc -m * | sort -n | tail -n 1
 echo
 
 # ---------------------------------------------------------------------------------
