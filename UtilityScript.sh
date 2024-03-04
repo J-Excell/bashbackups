@@ -64,7 +64,19 @@ echo TO BE IMPLEMENTED
 # get each directory
 # get file in each directory
 
-ls -f $(find . -type d) | wc -m  | sort -n | head -n 1
+#ls -f $(find . -type d) | wc -m * | sort -n | head -n 1
+
+#for DIRECTORY in $(find . -type d) 
+#do
+    #cd $DIRECTORY
+    #wc -m $(ls -d) | sort -n | head -n 1
+    #wc -m $(ls $DIRECTORY) | sort -n | head -n 1 | echo
+    #wc -m $(ls $DIRECTORY) | sort -rn | head -n 1 | echo
+#done
+
+cd subdirectory_1
+ls -la | wc -m * | sort -rn | head -n 1
+cd ..
 #ls $(find . -type d)| wc -m * | sort -n | tail -n 1
 echo
 
