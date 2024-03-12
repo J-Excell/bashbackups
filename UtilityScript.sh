@@ -7,6 +7,12 @@ echo | ls -la
 echo $'\n\n'
 # --------------------------------------------------------------------------------
 
+# ------------------------------------ NOTES -------------------------------------
+# Use redirect to log any error messages in error log file?
+
+
+# --------------------------------------------------------------------------------
+
 ##################################################################################
 
 # ---------------------------------- Task 1 --------------------------------------
@@ -74,9 +80,9 @@ echo TO BE IMPLEMENTED
     #wc -m $(ls $DIRECTORY) | sort -rn | head -n 1 | echo
 #done
 
-cd subdirectory_1
-ls -la | wc -m * | sort -rn | head -n 1
-cd ..
+#wc -c $(ls $(find . type d)) | sort -n | head -n 1
+#wc -c $(ls $(find . type d)) | sort -n | tail -n 1
+#cd ..
 #ls $(find . -type d)| wc -m * | sort -n | tail -n 1
 echo
 
