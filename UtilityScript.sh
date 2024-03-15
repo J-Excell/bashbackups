@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 cd _Directory
 
-# -------------------------- DIRECTORIES (for reference) -------------------------
-echo directories
-echo | ls -la
-echo $'\n\n'
-# --------------------------------------------------------------------------------
-
-# ------------------------------------ NOTES -------------------------------------
+# ------------------------------------- NOTES ------------------------------------
 # Use redirect to log any error messages in error log file?
-
-
+# >> to append, > to overwrite file
+# MS mentions needing to use ls, grep, stat and file
+# ls -X sorts files by extension category
+# File gets file type
 # --------------------------------------------------------------------------------
+
+echo ------------------------------- directories ---------------------------------
+echo | ls -la
+echo -----------------------------------------------------------------------------
+echo $'\n'
 
 ##################################################################################
 
@@ -19,23 +20,10 @@ echo $'\n\n'
 # For each child directory, report how many of each file type there are and
 # collective size of each file type
 
-# might need for loop? for file in directory
-
-# Sort files
-# if first file does not contain .
-# open directory etc
-# for each file
-# if type doesn't match previous
-    # echo number of files
-# else
-    # count for this type += 1
-
 echo File types and Collective size:
-# ls -X sorts files by extension category
-
-$(find . -type f $(find . -type d))
-
-echo $'\n\n'
+# need to group files - I think grep did this?
+echo TO BE IMPLEMENTED
+echo $'\n'
 
 # ---------------------------------------------------------------------------------
 
@@ -43,51 +31,31 @@ echo $'\n\n'
 
 # ----------------------------------- Task 2 --------------------------------------
 # For each child directory, specify total space used, in human readable format
-
-
-# ls -sh for space used
-# if file contains directories list sub directories too
 # took inspiration from listing vs finding in 2.8 finding things NOS workbook
 
-echo Child Directories and space used:
-
-echo
+echo Child Directories and space used: $'\n'
 ls -shd $(find . -type d)
 echo 
-
-
 # ---------------------------------------------------------------------------------
 
 ###################################################################################
 
 # ----------------------------------- Task 3 --------------------------------------
 # For each child directory, report the shortest and largest length of a file name
-echo TO BE IMPLEMENTED
-# wc -l * | sort -n | head -n 3
-# Gets the 3 files with least lines (Pipes and Filters NOS workbook)
-# get characters in line?? wc -m
+# Sort reverse numerically so largest is first
+echo Shortest and largest length of file names:
 
-# get each directory
-# get file in each directory
-
-#ls -f $(find . -type d) | wc -m * | sort -n | head -n 1
-
-#for DIRECTORY in $(find . -type d) 
-#do
-    #cd $DIRECTORY
-    #wc -m $(ls -d) | sort -n | head -n 1
-    #wc -m $(ls $DIRECTORY) | sort -n | head -n 1 | echo
-    #wc -m $(ls $DIRECTORY) | sort -rn | head -n 1 | echo
-#done
-
-#wc -c $(ls $(find . type d)) | sort -n | head -n 1
-#wc -c $(ls $(find . type d)) | sort -n | tail -n 1
-#cd ..
-#ls $(find . -type d)| wc -m * | sort -n | tail -n 1
-echo
-
+for DIRECTORY in $(find . -type d)
+do
+#    if $DIRECTORY = pwd?
+    
+    cd $DIRECTORY 1> junk.txt
+    echo $DIRECTORY
+    echo LARGEST:
+    find . -type f | ls -A | awk '{print length($0) " " $0 }' | sort -rn | head -n 1
+    echo SMALLEST:
+    find . -type f | ls -A | awk '{print length($0) " " $0 }' | sort -rn | tail -n 1
+    cd - 1> junk.txt # stop listing main directory every time u go back
+    echo $'\n'
+done
 # ---------------------------------------------------------------------------------
-
-# Output results to file and option to return to terminal
-# think this is done using >> but could be wrong
-# also will need a file to write to obviously
