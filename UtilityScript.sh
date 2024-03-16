@@ -6,7 +6,7 @@ cd _Directory
 # >> to append, > to overwrite file
 # MS mentions needing to use ls, grep, stat and file
 # ls -X sorts files by extension category
-# File gets file type
+# File gets file type, -b for type only
 # --------------------------------------------------------------------------------
 
 ##################################################################################
@@ -16,13 +16,14 @@ cd _Directory
 # collective size of each file type
 
 echo File types and Collective size:
-# need to group files - I think grep did this?
-# file -b for type only
 
 for DIRECTORY in $(find . -type d) 
 do
     cd $DIRECTORY
-    file -b *
+    for TYPE in $(file -b $(find . -type f))
+    do
+        
+    done
     cd - 1> junk.txt
 done
 echo $'\n'
@@ -35,7 +36,7 @@ echo $'\n'
 # For each child directory, specify total space used, in human readable format
 # took inspiration from listing vs finding in 2.8 finding things NOS workbook
 
-echo Child Directories and space used: $'\n'
+echo Child Directories and space used:
 ls -shd $(find . -type d)
 echo 
 # ---------------------------------------------------------------------------------
