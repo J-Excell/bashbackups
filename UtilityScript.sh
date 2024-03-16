@@ -9,11 +9,6 @@ cd _Directory
 # File gets file type
 # --------------------------------------------------------------------------------
 
-echo ------------------------------- directories ---------------------------------
-echo | ls -la
-echo -----------------------------------------------------------------------------
-echo $'\n'
-
 ##################################################################################
 
 # ---------------------------------- Task 1 --------------------------------------
@@ -22,7 +17,14 @@ echo $'\n'
 
 echo File types and Collective size:
 # need to group files - I think grep did this?
-echo TO BE IMPLEMENTED
+# file -b for type only
+
+for DIRECTORY in $(find . -type d) 
+do
+    cd $DIRECTORY
+    file -b *
+    cd - 1> junk.txt
+done
 echo $'\n'
 
 # ---------------------------------------------------------------------------------
@@ -44,19 +46,20 @@ echo
 # For each child directory, report the shortest and largest length of a file name
 
 echo Shortest and largest length of file names:
-
 for DIRECTORY in $(find . -type d)
 do
     if [ "$DIRECTORY" != "." ]; then     
         cd $DIRECTORY 
         echo $DIRECTORY
         
+        echo -n "LARGEST FILE: "
         find . -type f | ls -A | \
-            awk '{ print "LARGEST FILE: " length($0) " characters (" $0 ")" }' | \
+            awk '{ print length($0) " characters (" $0 ")" }' | \
             sort -rn | head -n 1
         
+        echo -n "SMALLEST FILE: "
         find . -type f | ls -A | \
-            awk '{ print "SMALLEST FILE: " length($0) " characters (" $0 ")" }' | \
+            awk '{ print length($0) " characters (" $0 ")" }' | \
             sort -rn | tail -n 1
         echo 
 
