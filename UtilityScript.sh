@@ -42,20 +42,25 @@ echo
 
 # ----------------------------------- Task 3 --------------------------------------
 # For each child directory, report the shortest and largest length of a file name
-# Sort reverse numerically so largest is first
+
 echo Shortest and largest length of file names:
 
 for DIRECTORY in $(find . -type d)
 do
-#    if $DIRECTORY = pwd?
-    
-    cd $DIRECTORY 1> junk.txt
-    echo $DIRECTORY
-    echo LARGEST:
-    find . -type f | ls -A | awk '{print length($0) " " $0 }' | sort -rn | head -n 1
-    echo SMALLEST:
-    find . -type f | ls -A | awk '{print length($0) " " $0 }' | sort -rn | tail -n 1
-    cd - 1> junk.txt # stop listing main directory every time u go back
-    echo $'\n'
+    if [ "$DIRECTORY" != "." ]; then     
+        cd $DIRECTORY 
+        echo $DIRECTORY
+        
+        find . -type f | ls -A | \
+            awk '{ print "LARGEST FILE: " length($0) " characters (" $0 ")" }' | \
+            sort -rn | head -n 1
+        
+        find . -type f | ls -A | \
+            awk '{ print "SMALLEST FILE: " length($0) " characters (" $0 ")" }' | \
+            sort -rn | tail -n 1
+        echo 
+
+        cd - 1> junk.txt # stop listing main directory every time u go back
+    fi
 done
 # ---------------------------------------------------------------------------------
