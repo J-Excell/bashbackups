@@ -20,10 +20,7 @@ echo File types and Collective size:
 for DIRECTORY in $(find . -type d) 
 do
     cd $DIRECTORY
-    for TYPE in $(file -b $(find . -type f))
-    do
-        
-    done
+        echo to be implemented
     cd - 1> junk.txt
 done
 echo $'\n'
@@ -36,8 +33,19 @@ echo $'\n'
 # For each child directory, specify total space used, in human readable format
 # took inspiration from listing vs finding in 2.8 finding things NOS workbook
 
+# This still doesn't properly work because the subsubdirectories are bigger than
+# the subdirectories
 echo Child Directories and space used:
-ls -shd $(find . -type d)
+for DIRECTORY in $(find . -type d)
+do 
+    cd $DIRECTORY
+        if [ "$DIRECTORY" != "." ]; then 
+            echo $DIRECTORY
+            ls -sh | \
+            awk 'BEGIN { totalsize = 0 } { totalsize += $1 } END { print totalsize "K" } '
+        fi
+    cd - 1> junk.txt
+done
 echo 
 # ---------------------------------------------------------------------------------
 
@@ -54,14 +62,18 @@ do
         echo $DIRECTORY
         
         echo -n "LARGEST FILE: "
-        find . -type f | ls -A | \
+        find . -type f | \
+            ls -A | \
             awk '{ print length($0) " characters (" $0 ")" }' | \
-            sort -rn | head -n 1
+            sort -rn | \
+            head -n 1
         
         echo -n "SMALLEST FILE: "
-        find . -type f | ls -A | \
+        find . -type f | \
+            ls -A | \
             awk '{ print length($0) " characters (" $0 ")" }' | \
-            sort -rn | tail -n 1
+            sort -rn | \
+            tail -n 1
         echo 
 
         cd - 1> junk.txt # stop listing main directory every time u go back
