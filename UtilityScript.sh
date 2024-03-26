@@ -20,10 +20,23 @@ echo File types and Collective size:
 for DIRECTORY in $(find . -type d) 
 do
     cd $DIRECTORY
-        echo to be implemented
-    cd - 1> junk.txt
-done
-echo $'\n'
+
+    # can you use awk and stat?
+
+
+    #declare -a FILE_TYPES
+    #declare -a FILE_TYPE_SIZE_COUNT
+    #for FILE in $(find . -type f)
+    #do
+    #    THISFILE = File(FILE)
+    #    THISSIZE = 
+    #    for FILE_TYPE in ${FILE_TYPES[@]}
+    #    do
+    #        if 
+    #done 
+    #cd - 1> junk.txt
+#done
+#echo# $'\n'
 
 # ---------------------------------------------------------------------------------
 
@@ -34,13 +47,14 @@ echo $'\n'
 # took inspiration from listing vs finding in 2.8 finding things NOS workbook
 
 # This still doesn't properly work because the subsubdirectories are bigger than
-# the subdirectories
+# the subdirectories?
 echo Child Directories and space used:
 for DIRECTORY in $(find . -type d)
 do 
     cd $DIRECTORY
         if [ "$DIRECTORY" != "." ]; then 
             echo $DIRECTORY
+            # find . -type f | \ <- not needed
             ls -sh | \
             awk 'BEGIN { totalsize = 0 } { totalsize += $1 } END { print totalsize "K" } '
         fi
