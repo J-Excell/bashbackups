@@ -20,23 +20,36 @@ echo File types and Collective size:
 for DIRECTORY in $(find . -type d) 
 do
     cd $DIRECTORY
-
-    # can you use awk and stat?
-
-
-    #declare -a FILE_TYPES
-    #declare -a FILE_TYPE_SIZE_COUNT
-    #for FILE in $(find . -type f)
-    #do
-    #    THISFILE = File(FILE)
-    #    THISSIZE = 
-    #    for FILE_TYPE in ${FILE_TYPES[@]}
-    #    do
-    #        if 
-    #done 
-    #cd - 1> junk.txt
-#done
-#echo# $'\n'
+    echo $DIRECTORY
+    declare -A FILES
+    
+    for FILE in $(find . -type f) 
+    do
+        THISFILE=$(file $FILE | awk '{print $2}')
+        THISSIZE=$(stat -c %s $FILE)
+        
+        if [ -v FILES["$THISFILE"] ]; then 
+		((FILES["$THISFILE"]+=$THISSIZE))
+        else 
+        	((FILES["$THISFILE"]=$THISSIZE))
+        fi
+    done
+    
+    totalsize=0
+    for FILETYPE in "${!FILES[@]}" 
+    do
+    	((KSIZE=${FILES[$FILETYPE]}/1024))
+    	echo "$FILETYPE	| ${FILES[$FILETYPE]} bytes ($KSIZE kilobytes)"
+    	((totalsize+=${FILES[$FILETYPE]}))
+    done
+    ((totalsize/=1024))
+    echo "total size $totalsize"
+    
+    
+    echo
+    cd - 1> /dev/null
+done
+echo $'\n'
 
 # ---------------------------------------------------------------------------------
 
@@ -46,19 +59,16 @@ do
 # For each child directory, specify total space used, in human readable format
 # took inspiration from listing vs finding in 2.8 finding things NOS workbook
 
-# This still doesn't properly work because the subsubdirectories are bigger than
-# the subdirectories?
 echo Child Directories and space used:
 for DIRECTORY in $(find . -type d)
 do 
     cd $DIRECTORY
         if [ "$DIRECTORY" != "." ]; then 
             echo $DIRECTORY
-            # find . -type f | \ <- not needed
-            ls -sh | \
+            ls -s | \
             awk 'BEGIN { totalsize = 0 } { totalsize += $1 } END { print totalsize "K" } '
         fi
-    cd - 1> junk.txt
+    cd - 1> /dev/null
 done
 echo 
 # ---------------------------------------------------------------------------------
@@ -90,7 +100,7 @@ do
             tail -n 1
         echo 
 
-        cd - 1> junk.txt # stop listing main directory every time u go back
+        cd - 1> /dev/null
     fi
 done
 # ---------------------------------------------------------------------------------
