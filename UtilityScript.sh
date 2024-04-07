@@ -43,11 +43,10 @@ do
     	((totalsize+=${FILES[$FILETYPE]}))
     done
     ((totalsize/=1024))
-    echo "total size $totalsize"
-    
-    
+    echo "total size $totalsize K"
     echo
     cd - 1> /dev/null
+    unset FILES
 done
 echo $'\n'
 
@@ -66,7 +65,7 @@ do
         if [ "$DIRECTORY" != "." ]; then 
             echo $DIRECTORY
             ls -s | \
-            awk 'BEGIN { totalsize = 0 } { totalsize += $1 } END { print totalsize "K" } '
+            awk 'BEGIN { totalsize = 0 } { totalsize += $1 } END { print totalsize "K" }'
         fi
     cd - 1> /dev/null
 done
