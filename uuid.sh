@@ -1,6 +1,7 @@
 # uuid
 echo UUID Generator
-echo "UUID 4:"
+
+############################# UUID4 #########################################
 
 first=$(dd if=/dev/random count=6 bs=1 2> /dev/null | xxd -ps)
 
@@ -22,4 +23,4 @@ byte9=$(echo "ibase=10;obase=16;${byte9}" | bc -l) #convert dec back to hex
 
 last=$(dd if=/dev/random count=7 bs=1 2> /dev/null | xxd -ps)
 
-echo "${first:0:8}-${first:8:4}-${byte7}${byte8}-${byte9}${last:0:2}-${last:2:12}"
+echo "UUID 4: ${first:0:8}-${first:8:4}-${byte7,,}${byte8}-${byte9,,}${last:0:2}-${last:2:12}"
