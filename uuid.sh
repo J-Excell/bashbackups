@@ -3,43 +3,39 @@ echo UUID Generator
 
 # notes
 # date +%s returns number of seconds since the epoch
+# date +%s.%N adds nanosecond precision
 
 ############################# UUID1 #########################################
 
-currentdate=$(echo "$(date +%s.%N) * 1000000000" | bc) # nanoseconds since epoch
-echo $currentdate
+# Get current date and UUID epoch date
+currentdate=$(echo "$(date +%s.%N) * 1000000000" | bc)
 uuidepoch=$(echo "$(date -d "15 Oct 1582 00:00 UTC" +%s.%N) * -1000000000" | bc)
-echo $uuidepoch
-uuiddate=$(echo "($currentdate + $uuidepoch + 1) " | bc) # add 1 for version
-echo $uuiddate
+
+# Calculate UUID date
+uuiddate=$(echo "($currentdate + $uuidepoch + 1)" | bc) # add 1 for version
 uuiddate=$(echo "ibase=10;obase=16;${uuiddate}" | bc -l)
+
+# Get MAC address and generate clock sequence
 macaddress=$(ifconfig | awk '/ether/ {print $2}' | tr -d :)
 clocksequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
+
+# Output UUID 1
 echo "UUID 1: ${uuiddate:0:8}-${uuiddate:8:4}-${uuiddate:12:4}-${clocksequence}-${macaddress}"
 
-
-echo
 ############################# UUID4 #########################################
 
-first=$(dd if=/dev/urandom count=6 bs=1 2> /dev/null | xxd -ps)
-
+# Generate random numbers
+main=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
 byte7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
-#echo "Original byte: ${byte7^^}"./
-byte7=$((16#$byte7 & 10#15))
-byte7=$((10#$byte7 | 10#64))
-byte7=$(echo "ibase=10;obase=16;${byte7}" | bc -l) #convert dec back to hex
-#echo "After and with 0x0f and or with 0x40: $byte7"
-
-byte8=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps)
-
 byte9=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
-#echo "Original byte: ${byte9^^}"
-byte9=$((16#$byte9 & 10#63))
-byte9=$((10#$byte9 | 10#128))
-byte9=$(echo "ibase=10;obase=16;${byte9}" | bc -l) #convert dec back to hex
-# ^ not actually sure this is needed
-#echo "After and with 0x3f and or with 0x80: $byte9"
 
-last=$(dd if=/dev/urandom count=7 bs=1 2> /dev/null | xxd -ps)
+# Perform binary arithmetic
+byte7=$((16#$byte7 & 16#0f | 16#40))
+byte9=$((16#$byte9 & 16#3f | 16#80))
 
-echo "UUID 4: ${first:0:8}-${first:8:4}-${byte7,,}${byte8}-${byte9,,}${last:0:2}-${last:2:12}"
+# Convert back to hexadecimal
+byte7=$(echo "ibase=10;obase=16;${byte7}" | bc -l)
+byte9=$(echo "ibase=10;obase=16;${byte9}" | bc -l)
+
+# Output UUID 4
+echo "UUID 4: ${main:0:8}-${main:8:4}-${byte7,,}${main:12:2}-${byte9,,}${main:14:2}-${main:16:12}"
