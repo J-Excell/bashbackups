@@ -20,6 +20,10 @@ echo File types and Collective size:
 for DIRECTORY in $(find . -type d) 
 do
     cd $DIRECTORY
+    if [ "$DIRECTORY" == "." ]; then 
+    	continue 
+    fi
+
     echo $DIRECTORY
     declare -A FILES
     
@@ -62,11 +66,12 @@ echo Child Directories and space used:
 for DIRECTORY in $(find . -type d)
 do 
     cd $DIRECTORY
-        if [ "$DIRECTORY" != "." ]; then 
-            echo $DIRECTORY
-            ls -s | \
-            awk 'BEGIN { totalsize = 0 } { totalsize += $1 } END { print totalsize "K" }'
-        fi
+        if [ "$DIRECTORY" == "." ]; then 
+        	continue 
+	fi
+        echo $DIRECTORY
+        ls -s | \
+        awk 'BEGIN { totalsize = 0 } { totalsize += $1 } END { print totalsize "K" }'
     cd - 1> /dev/null
 done
 echo 
