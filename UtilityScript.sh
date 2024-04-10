@@ -26,6 +26,7 @@ do
 
     echo $DIRECTORY
     declare -A FILES
+    declare -A FILECOUNT
     
     for FILE in $(find . -type f) 
     do
@@ -34,8 +35,10 @@ do
         
         if [ -v FILES["$THISFILE"] ]; then 
 		((FILES["$THISFILE"]+=$THISSIZE))
+		((FILECOUNT["$THISFILE"]+=1))
         else 
         	((FILES["$THISFILE"]=$THISSIZE))
+        	((FILECOUNT["$THISFILE"]=1))
         fi
     done
     
@@ -43,14 +46,16 @@ do
     for FILETYPE in "${!FILES[@]}" 
     do
     	((KSIZE=${FILES[$FILETYPE]}/1024))
-    	echo "$FILETYPE	| ${FILES[$FILETYPE]} bytes ($KSIZE kilobytes)"
+    	echo "$FILETYPE size:  ${FILESIZES[$FILETYPE]} bytes ($KSIZE kilobytes)"
+    	echo "$FILETYPE count: ${FILECOUNT[$FILETYPE]}"
     	((totalsize+=${FILES[$FILETYPE]}))
     done
     ((totalsize/=1024))
     echo "total size $totalsize K"
     echo
-    cd - 1> /dev/null
+    cd -
     unset FILES
+    unset FILECOUNT
 done
 echo $'\n'
 
