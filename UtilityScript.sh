@@ -19,7 +19,7 @@
 
 function task1 
 {
-    cd _Directory
+    cd _Directory >/dev/null
     echo "File types and Collective size"
 
     for directory in $(find . -type d) 
@@ -58,11 +58,12 @@ function task1
         done
 
         echo "total size $totalSize K"
+        echo
         unset fileSizes
         unset fileCount
-        cd - 1> /dev/null
+        cd - >/dev/null
     done
-    cd - 1> /dev/null
+    cd .. >/dev/null
 }
 # ---------------------------------------------------------------------------------
 
@@ -89,10 +90,10 @@ function task2
         do
             ((size+=$(stat -c %s $file)))
         done
-        echo $((size/1024))
+        echo "$((size/1024))K"
         cd - 1> /dev/null
     done
-    cd - 1> /dev/null
+    cd ..
 }
 
 # ---------------------------------------------------------------------------------
@@ -126,7 +127,7 @@ function task3
         echo
         cd - 1> /dev/null
     done
-    cd - 1> /dev/null
+    cd ..
 }
 # ---------------------------------------------------------------------------------
 
@@ -136,73 +137,72 @@ function task3
 
 function uuid1 
 {
-# Get current date and UUID epoch date
-currentDate=$(echo "$(date +%s.%N) * 1000000000" | bc)
-uuidEpoch=$(echo "$(date -d "15 Oct 1582 00:00 UTC" +%s.%N) * -1000000000" | bc)
+    # Get current date and UUID epoch date
+    currentDate=$(echo "$(date +%s.%N) * 1000000000" | bc)
+    uuidEpoch=$(echo "$(date -d "15 Oct 1582 00:00 UTC" +%s.%N) * -1000000000" | bc)
 
-# Calculate UUID date
-uuidDate=$(echo "($currentDate + $uuidEpoch + 1)" | bc) # add 1 for version
-uuidDate=$(echo "ibase=10;obase=16;${uuidDate}" | bc -l)
+    # Calculate UUID date
+    uuidDate=$(echo "($currentDate + $uuidEpoch + 1)" | bc) # add 1 for version
+    uuidDate=$(echo "ibase=10;obase=16;${uuidDate}" | bc -l)
 
-# Get MAC address and generate clock sequence
-macAddress=$(ifconfig | awk '/ether/ {print $2}' | tr -d :)
-clockSequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
+    # Get MAC address and generate clock sequence
+    macAddress=$(ifconfig | awk '/ether/ {print $2}' | tr -d :)
+    clockSequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
 
-# Output UUID 1
-echo "UUID 1: ${uuidDate:0:8}-${uuidDate:8:4}-${uuidDate:12:4}-${clockSequence}-${macAddress}"
+    # Output UUID 1
+    echo "UUID 1: ${uuidDate:0:8}-${uuidDate:8:4}-${uuidDate:12:4}-${clockSequence}-${macAddress}"
 }
 
 #################################### UUID4 #########################################
 
 function uuid4 
 {
-# Generate random numbers
-coreUUID=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
-byte7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
-byte9=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
+    # Generate random numbers
+    coreUUID=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
+    byte7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
+    byte9=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
 
-# Perform binary arithmetic
-byte7=$((16#$byte7 & 16#0f | 16#40))
-byte9=$((16#$byte9 & 16#3f | 16#80))
+    # Perform binary arithmetic
+    byte7=$((16#$byte7 & 16#0f | 16#40))
+    byte9=$((16#$byte9 & 16#3f | 16#80))
 
-# Convert back to hexadecimal
-byte7=$(echo "ibase=10;obase=16;${byte7}" | bc -l)
-byte9=$(echo "ibase=10;obase=16;${byte9}" | bc -l)
+    # Convert back to hexadecimal
+    byte7=$(echo "ibase=10;obase=16;${byte7}" | bc -l)
+    byte9=$(echo "ibase=10;obase=16;${byte9}" | bc -l)
 
-# Output UUID 4
-echo "UUID 4: ${coreUUID:0:8}-${coreUUID:8:4}-${byte7,,}${coreUUID:12:2}-${byte9,,}${coreUUID:14:2}-${coreUUID:16:12}"
+    # Output UUID 4
+    echo "UUID 4: ${coreUUID:0:8}-${coreUUID:8:4}-${byte7,,}${coreUUID:12:2}-${byte9,,}${coreUUID:14:2}-${coreUUID:16:12}"
 }
 
 # entry point
-
-while getopts "bnmutf" flag
+outputToTerminal=0
+outputfile="test.txt"
+while getopts 'tbnmu:f:' flag
 do
 #log input
-    outputToTerminal=0
-    outputfile="test.txt"
-    uuid1 > $outputfile
-
     case "${flag}" in
-        t)  outputToTerminal=1;;
-        f)  outputfile=$OPTARG;;
         b)  
             echo Getting file types and collective sizes. Please wait...
             task1 1> $outputfile
-            
-            if [ $outputToTerminal==0 ]; then
+
+            if [ $outputToTerminal == 0 ]; then
                 echo "Done. Please see ${outputfile} for your results."
             else
                 cat $outputfile
-            fi;;
+            fi
+            ;;
+        
         n)  
             echo Getting total space for each directory. Please wait...
             task2 1> $outputfile
 
-            if [ $outputToTerminal==0 ]; then
+            if [ $outputToTerminal == 0 ]; then
                 echo "Done. Please see ${outputfile} for your results."
             else
                 cat $outputfile
-            fi;;
+            fi
+            ;;
+        
         m)  
             echo Getting shortest and largest file names for each directory. Please wait...
             task3 1> $outputfile
@@ -211,15 +211,30 @@ do
                 echo "Done. Please see ${outputfile} for your results."
             else
                 cat $outputfile
-            fi;;
+            fi
+            ;;
         
-        u)  
+        u | uuid)  
             case "${OPTARG}" in 
-                1)  uuid1;;
-                4)  uuid4;;
-                ?)  echo "${OPTARG} is not a supported UUID.";;
-            esac;;
-        
-        ?)  echo "-${flag} is an invalid flag. Please try again.";;
+                1)  
+                    echo "Generating a unique UUID version 1"
+                    uuid1
+                    ;;
+                4)  
+                    echo "Generating a unique UUID version 4"
+                    uuid4
+                    ;;
+                ?)  
+                    echo "${OPTARG} is not a supported UUID."
+                    ;;
+            esac
+            ;;
+
+        f)  outputfile=$OPTARG
+            ;;
+        t | terminal)  outputToTerminal=1;;
+        ?)  
+            echo "Invalid flag. Please try again."
+            ;;
     esac
 done
