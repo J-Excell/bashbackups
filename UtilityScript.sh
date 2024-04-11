@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-cd _Directory
 
 # ------------------------------------- NOTES ------------------------------------
 # Use redirect to log any error messages in error log file?
@@ -18,8 +17,10 @@ cd _Directory
 #For each child directory, report how many of each file type there are and
 #collective size of each file type
 
-function task1 {
-    echo File types and Collective size:
+function task1 
+{
+    cd _Directory
+    echo "File types and Collective size"
 
     for directory in $(find . -type d) 
     do
@@ -61,6 +62,7 @@ function task1 {
         unset fileCount
         cd - 1> /dev/null
     done
+    cd - 1> /dev/null
 }
 # ---------------------------------------------------------------------------------
 
@@ -71,7 +73,8 @@ function task1 {
 # took inspiration from listing vs finding in 2.8 finding things NOS workbook
 function task2
 {
-   echo Child Directories and space used:
+    cd _Directory
+    echo Child Directories and space used:
     for directory in $(find . -type d)
     do 
         if [ "$directory" == "." ]; then 
@@ -89,6 +92,7 @@ function task2
         echo $((size/1024))
         cd - 1> /dev/null
     done
+    cd - 1> /dev/null
 }
 
 # ---------------------------------------------------------------------------------
@@ -97,29 +101,32 @@ function task2
 
 # ----------------------------------- Task 3 --------------------------------------
 # For each child directory, report the shortest and largest length of a file name
-function task3 {
-echo Shortest and largest length of file names:
-for directory in $(find . -type d)
-do
-    if [ "$directory" == "." ]; then 
-        continue 
-	fi
+function task3 
+{
+    echo Shortest and largest length of file names:
+    cd _Directory 
+    for directory in $(find . -type d)
+    do
+        if [ "$directory" == "." ]; then 
+            continue 
+        fi
 
-    echo $directory
-    cd $directory
+        echo $directory
+        cd $directory
+            
+        echo -n "LARGEST FILE NAME: "
+        find . -type f | ls -A | \
+            awk '{ print length($0) " characters (" $0 ")" }' | \
+            sort -rn | head -n 1
         
-    echo -n "LARGEST file NAME: "
-    find . -type f | ls -A | \
-        awk '{ print length($0) " characters (" $0 ")" }' | \
-        sort -rn | head -n 1
-    
-    echo -n "SMALLEST file NAME: "
-    find . -type f | ls -A | \
-        awk '{ print length($0) " characters (" $0 ")" }' | \
-        sort -rn | tail -n 1
-    echo
+        echo -n "SMALLEST FILE NAME: "
+        find . -type f | ls -A | \
+            awk '{ print length($0) " characters (" $0 ")" }' | \
+            sort -rn | tail -n 1
+        echo
+        cd - 1> /dev/null
+    done
     cd - 1> /dev/null
-done
 }
 # ---------------------------------------------------------------------------------
 
@@ -127,7 +134,8 @@ done
 
 ################################### UUID1 #########################################
 
-function uuid1 {
+function uuid1 
+{
 # Get current date and UUID epoch date
 currentDate=$(echo "$(date +%s.%N) * 1000000000" | bc)
 uuidEpoch=$(echo "$(date -d "15 Oct 1582 00:00 UTC" +%s.%N) * -1000000000" | bc)
@@ -146,7 +154,8 @@ echo "UUID 1: ${uuidDate:0:8}-${uuidDate:8:4}-${uuidDate:12:4}-${clockSequence}-
 
 #################################### UUID4 #########################################
 
-function uuid4 {
+function uuid4 
+{
 # Generate random numbers
 coreUUID=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
 byte7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
@@ -165,23 +174,52 @@ echo "UUID 4: ${coreUUID:0:8}-${coreUUID:8:4}-${byte7,,}${coreUUID:12:2}-${byte9
 }
 
 # entry point
-while getopts "bnm14" flag
+
+while getopts "bnmutf" flag
 do
+#log input
+    outputToTerminal=0
+    outputfile="test.txt"
+    uuid1 > $outputfile
+
     case "${flag}" in
-        b) 
-            task1 
-            ;;
-        n) 
-            task2
-            ;;
-        m) 
-            task3
-            ;;
-        1) 
-            uuid1
-            ;;
-        4) 
-            uuid4
-            ;;
+        t)  outputToTerminal=1;;
+        f)  outputfile=$OPTARG;;
+        b)  
+            echo Getting file types and collective sizes. Please wait...
+            task1 1> $outputfile
+            
+            if [ $outputToTerminal==0 ]; then
+                echo "Done. Please see ${outputfile} for your results."
+            else
+                cat $outputfile
+            fi;;
+        n)  
+            echo Getting total space for each directory. Please wait...
+            task2 1> $outputfile
+
+            if [ $outputToTerminal==0 ]; then
+                echo "Done. Please see ${outputfile} for your results."
+            else
+                cat $outputfile
+            fi;;
+        m)  
+            echo Getting shortest and largest file names for each directory. Please wait...
+            task3 1> $outputfile
+
+            if [ $outputToTerminal==0 ]; then
+                echo "Done. Please see ${outputfile} for your results."
+            else
+                cat $outputfile
+            fi;;
+        
+        u)  
+            case "${OPTARG}" in 
+                1)  uuid1;;
+                4)  uuid4;;
+                ?)  echo "${OPTARG} is not a supported UUID.";;
+            esac;;
+        
+        ?)  echo "-${flag} is an invalid flag. Please try again.";;
     esac
 done
