@@ -1,216 +1,133 @@
 #!/usr/bin/env bash
 
-# ------------------------------------- NOTES ------------------------------------
-# Use redirect to log any error messages in error log file?
-# >> to append, > to overwrite file
-# MS mentions needing to use ls, grep, stat and file
-# ls -X sorts fileSizes by extension category
-# File gets file type, -b for type only
-# date +%s returns number of seconds since the epoch
-# date +%s.%N adds nanosecond precision
-# colon after flag to indicate argument needed (getops line)
-# --------------------------------------------------------------------------------
-
-##################################################################################
-
-# ---------------------------------- Task 1 --------------------------------------
-#For each child directory, report how many of each file type there are and
-#collective size of each file type
-
-function task1 
-{
-    cd _Directory >/dev/null
-    echo "File types and Collective size"
-
-    for directory in $(find . -type d) 
-    do
-        if [ "$directory" == "." ]; then 
-            continue 
-        fi
-
-        echo $directory
-        cd $directory
-
-        declare -A fileSizes
-        declare -A fileCount
-        totalSize=0
-        
-        for file in $(find . -maxdepth 1 -type f) 
-        do
-            thisType=$(file $file | awk '{print $2}')
-            thisSize=$(stat -c %s $file)
-            
-            if [ -v fileSizes["$thisType"] ]; then 
-                ((fileSizes["$thisType"]+=$thisSize))
-                ((fileCount["$thisType"]+=1))
-            else 
-                ((fileSizes["$thisType"]=$thisSize))
-                ((fileCount["$thisType"]=1))
-            fi
-        done
-        
-        for fileType in "${!fileSizes[@]}" 
-        do
-            ((kSize=${fileSizes[$fileType]}/1024))
-            echo "$fileType size:  ${fileSizes[$fileType]} bytes ($kSize kilobytes)"
-            echo "$fileType count: ${fileCount[$fileType]}"
-            ((totalSize+=kSize))
-        done
-
-        echo "total size $totalSize K"
-        echo
-        unset fileSizes
-        unset fileCount
-        cd - >/dev/null
-    done
-    cd .. >/dev/null
-}
-# ---------------------------------------------------------------------------------
-
-###################################################################################
-
-# ----------------------------------- Task 2 --------------------------------------
-# For each child directory, specify total space used, in human readable format
-# took inspiration from listing vs finding in 2.8 finding things NOS workbook
-function task2
-{
-    cd _Directory
-    echo Child Directories and space used:
-    for directory in $(find . -type d)
-    do 
-        if [ "$directory" == "." ]; then 
-            continue 
-        fi
-
-        echo $directory
-        cd $directory
-        size=0
-
-        for file in $(find . -maxdepth 1 -type f) 
-        do
-            ((size+=$(stat -c %s $file)))
-        done
-        echo "$((size/1024))K"
-        cd - 1> /dev/null
-    done
-    cd ..
-}
-
-# ---------------------------------------------------------------------------------
-
-###################################################################################
-
-# ----------------------------------- Task 3 --------------------------------------
+# For each child directory, report how many of each file type there are and
+# collective size of each file type
 # For each child directory, report the shortest and largest length of a file name
-function task3 
+function get_file_types_and_sizes 
 {
-    echo Shortest and largest length of file names:
+    cd $1
+
+    # Variable declaration
+    declare -A file_sizes
+    declare -A file_count
+    folder_total_size=0
+    
+    # For each file add size to collective type size and increment collective type count
+    for file in $(find . -maxdepth 1 -type f) 
+    do
+        this_type=$(file $file | awk '{print $2}')
+        this_size=$(stat -c %s $file)
+        
+        if [ -v file_sizes["$this_type"] ]; then 
+            ((file_sizes["$this_type"]+=$this_size))
+            ((file_count["$this_type"]+=1))
+        else 
+            ((file_sizes["$this_type"]=$this_size))
+            ((file_count["$this_type"]=1))
+        fi
+    done
+
+    # For file type in stored file types, display file type total size and count
+    # Add total size for this file type to total size for this folder
+    for file_type in "${!file_sizes[@]}" 
+    do
+        ((folder_total_size_kilobytes=${file_sizes[$file_type]}/1000))
+        echo "$file_type total size:  ${file_sizes[$file_type]} bytes ($folder_total_size_kilobytes kilobytes)"
+        echo "$file_type total count: ${file_count[$file_type]}"
+        ((folder_total_size+=folder_total_size_kilobytes))
+    done
+    echo "Total folder size used: ${folder_total_size}K"
+
+    cd - 1>/dev/null
+}
+
+# For each child directory, find the shortest and largest length of a file name
+function get_file_names 
+{
+    cd $1
+
+    echo -n "Largest file name: "
+    find . -type f | ls -A | awk '{ print length($0) " characters (" $0 ")" }' | sort -rn | head -n 1
+    echo -n "Smallest file name: "
+    find . -type f | ls -A | awk '{ print length($0) " characters (" $0 ")" }' | sort -rn | tail -n 1
+    
+    cd - 1> /dev/null
+}
+
+function categorise_directory()
+{
     cd _Directory 
     for directory in $(find . -type d)
     do
+        # Skip _Directory
         if [ "$directory" == "." ]; then 
             continue 
         fi
 
+        # Section 2 bullet points 1, 2 and 3
         echo $directory
-        cd $directory
-            
-        echo -n "LARGEST FILE NAME: "
-        find . -type f | ls -A | \
-            awk '{ print length($0) " characters (" $0 ")" }' | \
-            sort -rn | head -n 1
-        
-        echo -n "SMALLEST FILE NAME: "
-        find . -type f | ls -A | \
-            awk '{ print length($0) " characters (" $0 ")" }' | \
-            sort -rn | tail -n 1
-        echo
-        cd - 1> /dev/null
+        get_file_types_and_sizes $directory
+        get_file_names $directory
+        echo 
     done
     cd ..
 }
-# ---------------------------------------------------------------------------------
 
-###################################################################################
-
-################################### UUID1 #########################################
-
-function uuid1 
+# UUID 1
+function uuid_1 
 {
     # Get current date and UUID epoch date
-    currentDate=$(echo "$(date +%s.%N) * 1000000000" | bc)
-    uuidEpoch=$(echo "$(date -d "15 Oct 1582 00:00 UTC" +%s.%N) * -1000000000" | bc)
+    current_date=$(echo "$(date +%s.%N) * 1000000000" | bc)
+    uuid_epoch=$(echo "$(date -d "15 Oct 1582 00:00 UTC" +%s.%N) * -1000000000" | bc)
 
     # Calculate UUID date
-    uuidDate=$(echo "($currentDate + $uuidEpoch + 1)" | bc) # add 1 for version
-    uuidDate=$(echo "ibase=10;obase=16;${uuidDate}" | bc -l)
+    uuid_date=$(echo "($current_date + $uuid_epoch + 1)" | bc) # add 1 for version
+    uuid_date=$(echo "ibase=10;obase=16;${uuid_date}" | bc -l)
 
     # Get MAC address and generate clock sequence
-    macAddress=$(ifconfig | awk '/ether/ {print $2}' | tr -d :)
-    clockSequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
+    mac_address=$(ifconfig | awk '/ether/ {print $2}' | tr -d :)
+    clock_sequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
 
     # Output UUID 1
-    echo "UUID 1: ${uuidDate:0:8}-${uuidDate:8:4}-${uuidDate:12:4}-${clockSequence}-${macAddress}"
+    echo "UUID 1: ${uuid_date:0:8}-${uuid_date:8:4}-${uuid_date:12:4}-${clock_sequence}-${mac_address}"
 }
 
 #################################### UUID4 #########################################
 
-function uuid4 
+function uuid_4 
 {
     # Generate random numbers
-    coreUUID=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
-    byte7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
-    byte9=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
+    core_uuid=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
+    byte_7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
+    byte_9=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
 
     # Perform binary arithmetic
-    byte7=$((16#$byte7 & 16#0f | 16#40))
-    byte9=$((16#$byte9 & 16#3f | 16#80))
-
+    byte_7=$((16#$byte_7 & 16#0f | 16#40))
+    byte_9=$((16#$byte_9 & 16#3f | 16#80))
+    
     # Convert back to hexadecimal
-    byte7=$(echo "ibase=10;obase=16;${byte7}" | bc -l)
-    byte9=$(echo "ibase=10;obase=16;${byte9}" | bc -l)
+    byte_7=$(echo "ibase=10;obase=16;${byte_7}" | bc -l)
+    byte_9=$(echo "ibase=10;obase=16;${byte_9}" | bc -l)
 
     # Output UUID 4
-    echo "UUID 4: ${coreUUID:0:8}-${coreUUID:8:4}-${byte7,,}${coreUUID:12:2}-${byte9,,}${coreUUID:14:2}-${coreUUID:16:12}"
+    echo "UUID 4: ${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
 }
 
 # entry point
-outputToTerminal=0
-outputfile="test.txt"
-while getopts 'tbnmu:f:' flag
+output_to_terminal=0
+output_file="test.txt"
+while getopts 'ctu:f:' flag 2>>"errorlog.txt"
 do
-#log input
+    user=$(whoami)
+    current_date_and_time=$(date)
+    echo "${current_date_and_time} | ${user} used flags ${flag}" >> log.txt
     case "${flag}" in
-        b)  
-            echo Getting file types and collective sizes. Please wait...
-            task1 1> $outputfile
-
-            if [ $outputToTerminal == 0 ]; then
-                echo "Done. Please see ${outputfile} for your results."
+        c)  
+            categorise_directory > $output_file
+            if (($output_to_terminal==1)); then
+                cat $output_file
             else
-                cat $outputfile
-            fi
-            ;;
-        
-        n)  
-            echo Getting total space for each directory. Please wait...
-            task2 1> $outputfile
-
-            if [ $outputToTerminal == 0 ]; then
-                echo "Done. Please see ${outputfile} for your results."
-            else
-                cat $outputfile
-            fi
-            ;;
-        
-        m)  
-            echo Getting shortest and largest file names for each directory. Please wait...
-            task3 1> $outputfile
-
-            if [ $outputToTerminal==0 ]; then
-                echo "Done. Please see ${outputfile} for your results."
-            else
-                cat $outputfile
+                echo Please see $output_file for your results.
             fi
             ;;
         
@@ -218,11 +135,11 @@ do
             case "${OPTARG}" in 
                 1)  
                     echo "Generating a unique UUID version 1"
-                    uuid1
+                    uuid_1
                     ;;
                 4)  
                     echo "Generating a unique UUID version 4"
-                    uuid4
+                    uuid_4
                     ;;
                 ?)  
                     echo "${OPTARG} is not a supported UUID."
@@ -230,11 +147,8 @@ do
             esac
             ;;
 
-        f)  outputfile=$OPTARG
-            ;;
-        t | terminal)  outputToTerminal=1;;
-        ?)  
-            echo "Invalid flag. Please try again."
-            ;;
+        f)  output_file=$OPTARG;;
+        t | terminal)  output_to_terminal=1;;
+        ?)  echo Invalid flag. Please try again.;;
     esac
 done
