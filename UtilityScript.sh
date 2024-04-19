@@ -85,6 +85,8 @@ function uuid_1
     uuid_date=$(echo "($current_date + $uuid_epoch + 1)" | bc) # add 1 for version
     uuid_date=$(echo "ibase=10;obase=16;${uuid_date}" | bc -l)
 
+
+	# need to swap parts of this UUID around as the presentation is wrong
     # Get MAC address and generate clock sequence
     mac_address=$(ifconfig | awk '/ether/ {print $2}' | tr -d :)
     clock_sequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
