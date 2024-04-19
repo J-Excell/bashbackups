@@ -77,22 +77,22 @@ function categorise_directory()
 # UUID 1
 function uuid_1 
 {
-    # Get current date and UUID epoch date
-    current_date=$(echo "$(date +%s.%N) * 1000000000" | bc)
-    uuid_epoch=$(echo "$(date -d "15 Oct 1582 00:00 UTC" +%s.%N) * -1000000000" | bc)
+    # Get current date and UUID epoch date in 100ns intervals
+    current_date=$(($(date +%s%N)/100))
+    uuid_epoch=$(date -d "1582-10-15 00:00 UTC" +%s)
+    uuid_epoch=$(($uuid_epoch * -10000000))
 
-    # Calculate UUID date
-    uuid_date=$(echo "($current_date + $uuid_epoch + 1)" | bc) # add 1 for version
+
+    # Calculate UUID date in 100ns intervals
+    uuid_date=$(($current_date + $uuid_epoch))
     uuid_date=$(echo "ibase=10;obase=16;${uuid_date}" | bc -l)
 
-
-	# need to swap parts of this UUID around as the presentation is wrong
     # Get MAC address and generate clock sequence
-    mac_address=$(ifconfig | awk '/ether/ {print $2}' | tr -d :)
+    mac_address=$(ip link show | awk '/ether/ {print $2}' | tr -d :)
     clock_sequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
 
     # Output UUID 1
-    echo "${uuid_date:0:8}-${uuid_date:8:4}-${uuid_date:12:4}-${clock_sequence}-${mac_address}"
+    echo "${uuid_date:7:8}-${uuid_date:3:4}-1${uuid_date:0:3}-${clock_sequence}-${mac_address}"
 }
 
 # UUID 4
@@ -115,11 +115,8 @@ function uuid_4
     echo "${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
 }
 
-# Program entry point
-output_to_terminal=0
 output_file="test.txt"
-
-while getopts 'ctu:f:' flag 2>>"errorlog.txt"
+while getopts 'c:u:' flag 2>>"errorlog.txt"
 do
     # Log user, time and the flags they used
     user=$(whoami)
@@ -130,33 +127,45 @@ do
     case "${flag}" in
         c)
             # Categorise the directory (second bullet point)
+            echo "OPTARG ---${OPTARG}---"
+            echo Categorising directory. Please wait...
             categorise_directory > $output_file
-            if (($output_to_terminal==1)); then
-                cat $output_file
-            else
-                echo Please see $output_file for your results.
-            fi
-            ;;
-        
-        u | uuid)  
+            echo done
+            case "${OPTARG}" in 
+                "terminal" | "t")
+                    cat $output_file
+                    ;;
+                "file")
+                    echo Please see $output_file for your results.
+                    ;;
+                *)
+                    echo Invalid flag. Your results are still available at $output_file.
+                    ;;
+                esac
+                ;;
+
+        "u")  
             # Generate a UUID
             case "${OPTARG}" in 
                 1)  
                     echo "Generating a unique UUID version 1"
                     this_uuid=$(uuid_1)
-                    while (grep "$this_uuid" uuid.txt)
-                    do 
-                        echo Error: UUID generated already exists. Generating a new UUID...
-                        this_uuid=$(uuid_1)
-                    done
-                    echo $this_uuid
-                    echo $this_uuid >> uuid.txt
+                    if [ -f "uuid.txt" ]; then
+                        while (grep "$this_uuid" uuid.txt)
+                        do 
+                            echo Error: UUID generated already exists. Generating a new UUID...
+                            this_uuid=$(uuid_1)
+                        done
+                    fi
+                    current_date_and_time=$(date)
+                    echo "${this_uuid}"
+                    echo "${current_date_and_time} | ${this_uuid}" >> uuid.txt
                     ;;
                 4)  
                     echo "Generating a unique UUID version 4"
-                    this_uuid=$(uuid_4)
-                    if [ -f "uuid.txt"]; then
-                    while (grep "$this_uuid" uuid.txt)
+                    this_uuid=$(uuid_4) 
+                    if [ -f "uuid.txt" ]; then
+                        while (grep "$this_uuid" uuid.txt)
                         do 
                             echo Error: UUID generated already exists. Generating a new UUID...
                             this_uuid=$(uuid_4)
@@ -165,14 +174,13 @@ do
                     echo $this_uuid
                     echo $this_uuid >> uuid.txt
                     ;;
-                ?)  
+                *)  
                     echo "${OPTARG} is not a supported UUID."
                     ;;
             esac
             ;;
-
-        f)  output_file=$OPTARG;;
-        t | terminal)  output_to_terminal=1;;
-        ?)  echo Invalid flag. Please try again.;;
+        *)  
+            echo "${OPTARG} is an invalid flag. Please try again."
+            ;;
     esac
 done
