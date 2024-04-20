@@ -97,15 +97,16 @@ function handle_error()
 {
     case $1 in
         $error_mac_address )
-            echo "There was a problem accessing your MAC address."
-            echo "Error code: ${error_mac_address}"
+            echo "There was a problem accessing your MAC address (error code: ${error_mac_address})" 
+            echo "There was a problem accessing your MAC address (error code: ${error_mac_address})" > $error_log_file
         ;;
         $error_accessing_directory )
-            echo "There was a problem accessing the directory. Please try again."
-            echo "Error code: ${error_accessing_directory}"
+            echo "There was a problem accessing the directory (error code: ${error_accessing_directory})"
+            echo "There was a problem accessing the directory (error code: ${error_accessing_directory})" > $error_log_file
             ;;
         *)
             echo "An unknown error has occured. Please try again."
+            echo "An unknown error has occured. Please try again." > $error_log_file
             ;;
     esac
     exit $1
