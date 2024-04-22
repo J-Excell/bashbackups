@@ -4,7 +4,7 @@ Utility \- Categorise files and generate UUIDs
 .SH SYNOPSIS
 .B ./utility
 [\fB\-c\fR \f OUTPUT\fR] |
-[\fB\-u\fR \f VERSION\fR]
+[\fB\-u\fR \f VERSION | LAST\fR]
 .SH DESCRIPTION
 .B Utility
 can either categorise a file _Directory and it's subdirectories, or generate a UUID version 1 or 4.
@@ -19,8 +19,16 @@ Categorises a directory named _Directory.
     Save categorisation to categorise_directory.txt, then display result to standard output.
 .RE
 .TP
-.BR \-u " " \-\-version =\fI VERSION\fR
+.BR \-u " " \-\-version =\fI VERSION " | " LAST\fR
 Generate a UUID version 1 or 4. Other versions are not supported.
+.RS
+    \fB1\fR
+    Generate a UUID version 1.
+    \fB4\fR
+    Generate a UUID version 4.
+    \fBlast, l\fR
+    Get the last generated UUID.
+.RE
 .SH EXAMPLES
 .TP
 .B ./utility -c f
