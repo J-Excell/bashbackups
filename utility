@@ -92,17 +92,21 @@ function get_file_names()
     return 0
 }
 
-# Handling errors produced by directory categorisation or generating UUID 1.
+# Handling errors produced by directory categorisation, generating UUID 1 or getting the last UUID.
 function handle_error()
 {
     case $1 in
         $error_mac_address )
             echo "There was a problem accessing your MAC address (error code: ${error_mac_address})" 
             echo "There was a problem accessing your MAC address (error code: ${error_mac_address})" > $error_log_file
-        ;;
+            ;;
         $error_accessing_directory )
             echo "There was a problem accessing the directory (error code: ${error_accessing_directory})"
             echo "There was a problem accessing the directory (error code: ${error_accessing_directory})" > $error_log_file
+            ;;
+        $error_missing_uuid )
+            echo "There was a problem getting your last generated UUID (have you previously generated a UUID?) (error code: ${error_missing_uuid})"
+            echo "There was a problem getting your last generated UUID (have you previously generated a UUID?) (error code: ${error_missing_uuid})" > $error_log_file
             ;;
         *)
             echo "An unknown error has occured. Please try again."
@@ -156,16 +160,31 @@ function generate_uuid_4()
     # Output UUID 4
     echo "${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
 }
+
+# Get last generated UUID
+function get_last_uuid()
+{
+    # If file exists
+    if [ -f "$uuid_record_file" ]; then
+        last_uuid=$(tail -n 1 $uuid_record_file)
+        echo ${last_uuid}
+        return 0
+    else
+        echo "Could not generate UUID."
+        return $error_missing_uuid
+    fi
+}
 # Debug mode
-# set -x
+#set -x
 
 # Error codes
 error_accessing_directory=1
 error_mac_address=2
+error_missing_uuid=3
 
 # Directories and files
 starting_directory="_Directory"
-error_log_file="error_log.log"
+error_log_file="history.log"
 standard_output_file="directory_information.txt"
 uuid_record_file="uuid_history.txt"
 
@@ -178,7 +197,7 @@ do
     # Log user, time and the flags they used
     user=$(whoami)
     current_date_and_time=$(date)
-    echo "${current_date_and_time} | ${user} used flags ${flag}" >> $error_log_file
+    echo "${current_date_and_time} | ${user} used flag ${flag}" >> $error_log_file
     
     # Perform action based on flag
     case "${flag}" in
@@ -195,15 +214,14 @@ do
             ls
             case "${OPTARG}" in 
                 # Output results to terminal
-                "terminal" | "t") 
+                "terminal" | "t" ) 
                     cat "$standard_output_file"
                     ;;
 
                 # Only save results to file
-                "file" | "f") 
+                "file" | "f" ) 
                     echo "Please see $standard_output_file for your results." 
                     ;;
-
                 # Other argument
                 *) 
                     echo "Invalid flag. Your results are still available at $standard_output_file." 
@@ -255,6 +273,18 @@ do
 
                     # Save the generated UUID to records
                     echo $this_uuid >> $uuid_record_file
+                    ;;
+
+                "last" | "l" )
+                    # Get last generated UUID
+                    echo "Getting the last generated UUID."
+
+                    # Error handling
+                    if ! this_uuid=$(get_last_uuid); then
+                        handle_error $error_missing_uuid
+                    fi
+
+                    echo $this_uuid
                     ;;
                 *)  
                     echo "${OPTARG} is not a supported UUID."

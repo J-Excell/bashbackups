@@ -1,12 +1,12 @@
-.TH UTILITYSCRIPT 1
+.TH Utility 1
 .SH NAME
-UtilityScript.sh \- Categorise files and generate UUIDs
+Utility \- Categorise files and generate UUIDs
 .SH SYNOPSIS
-.B ./UtilityScript.sh
+.B ./utility
 [\fB\-c\fR \f OUTPUT\fR] |
 [\fB\-u\fR \f VERSION\fR]
 .SH DESCRIPTION
-.B UtilityScript
+.B Utility
 can either categorise a file _Directory and it's subdirectories, or generate a UUID version 1 or 4.
 .SH OPTIONS
 .TP
@@ -23,13 +23,13 @@ Categorises a directory named _Directory.
 Generate a UUID version 1 or 4. Other versions are not supported.
 .SH EXAMPLES
 .TP
-.B ./UtilityScript.sh -c f
+.B ./utility -c f
 Categorises _Directory and saves the results to a file categorise_directory.txt.
 .TP
-.B ./UtilityScript.sh -c terminal
+.B ./utility -c terminal
 Categorises _Directory and saves the results to categorise_directory.txt, then concatenates categorise_directory to standard output.
 .TP
-.B ./UtilityScript.sh -u 1
+.B ./utility -u 1
 Generates a unique UUID version 1.
 .SH SEE ALSO
 uuidgen(1), du(1)
