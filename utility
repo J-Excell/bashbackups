@@ -267,24 +267,24 @@ do
                 1)  
                     # Generate a UUID version 1
                     echo "Generating a unique UUID version 1"                
-                    this_uuid=$(generate_uuid_1) &
-
-                    # Track the pid of the process
+                    this_uuid=$(generate_uuid_1 &)
+                    
+                    # Track PID
                     subprocess_pid=$!
                     wait $subprocess_pid
-
+                    
                     # Handle any errors
                     if [[ $? -ne 0 ]]; then
                         handle_error $?
                     fi
 
                     # If the UUID has been previously generated, generate a new one
-                    if [ ! -f "$uuid_record_file" ]; then
-                        while (grep -q "$this_uuid" $uuid_record_file)
+                    if [ -f "$uuid_record_file" ]; then
+                        while (grep -q "$this_uuid" "$uuid_record_file")
                         do 
                             # Re-generate UUID
                             echo Error: UUID generated already exists. Generating a new UUID...
-                            this_uuid=$(generate_uuid_1) &
+                            this_uuid=$(generate_uuid_1 &)
 
                             # Track the pid of the process
                             subprocess_pid=$!
@@ -296,7 +296,6 @@ do
                             fi
                         done
                     fi
-
                     # Output the generated UUID
                     echo "${this_uuid}"
 
@@ -307,7 +306,7 @@ do
                 4)  
                     # Generate a UUID version 4
                     echo "Generating a unique UUID version 4"
-                    this_uuid=$(generate_uuid_4) &
+                    this_uuid=$(generate_uuid_4 &)
 
                     # Track PID
                     subprocess_pid=$!
@@ -317,10 +316,10 @@ do
 
                     # If the UUID has been previously generated, generate a new one 
                     if [[ -f "$uuid_record_file" ]]; then
-                        while (grep "$this_uuid" $uuid_record_file)
+                        while (grep -q "$this_uuid" "$uuid_record_file")
                         do 
                             handle_error $error_repeated_uuid
-                            this_uuid=$(generate_uuid_4) &
+                            this_uuid=$(generate_uuid_4 &)
                             subprocess_pid=$!
                             wait $subprocess_pid
                         done
@@ -336,7 +335,7 @@ do
                 "last" | "l" )
                     # Get last generated UUID
                     echo "Getting the last generated UUID."
-                    this_uuid=$(get_last_uuid) &
+                    this_uuid=$(get_last_uuid &)
                     
                     # Track PID
                     subprocess_pid=$!
