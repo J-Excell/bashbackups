@@ -228,7 +228,6 @@ do
             
             # Track the pid of the process
             subprocess_pid=$!
-            echo $subprocess_pid
             wait $subprocess_pid
 
             # Handle any errors
