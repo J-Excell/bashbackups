@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
-# Called by C flag
+# Gets file type counts, file type collective size and smallest and largest name
+# for a file (called by C flag)
 function categorise_directory()
 {
-    cd $starting_directory || return $error_accessing_directory
+    # Try to open the directory, if unable return error accessing directory
+    cd "$starting_directory" || return $error_accessing_directory
     
     for directory in $(find . -type d)
     do
@@ -12,7 +14,6 @@ function categorise_directory()
             continue 
         fi
 
-        # Section 2 bullet points 1, 2 and 3
         echo $directory
         if ! get_file_types_and_sizes $directory; then
             return $error_accessing_directory
@@ -79,11 +80,13 @@ function get_file_names()
     cd $1 || return $error_accessing_directory
 
     echo -n "Largest file name: "
-    find . -type f | ls -A | awk '{ print length($0) " characters (" $0 ")" }' | \
+    find . -maxdepth 1 -type f | ls -A | \
+    awk '{ print length($0) " characters (" $0 ")" }' | \
     sort -rn | head -n 1
 
     echo -n "Smallest file name: "
-    find . -type f | ls -A | awk '{ print length($0) " characters (" $0 ")" }' | \
+    find . -maxdepth 1 -type f | ls -A | \
+    awk '{ print length($0) " characters (" $0 ")" }' | \
     sort -rn | tail -n 1
     
     # Try to exit the current folder and go back to previous, if unable then return
@@ -199,6 +202,8 @@ uuid_record_file="uuid_history.txt"
 
 # Other varibale initialisation
 this_uuid=""
+main_pid=$$
+subprocess_pid=""
 
 # Check only 1 flag and argument supplied
 if [[ $# -ne 2 ]]; then 
@@ -219,13 +224,20 @@ do
             # Categorise the directory (second bullet point)
             echo Categorising directory. Please wait...
             touch "${standard_output_file}"
+            categorise_directory > "$standard_output_file" &
+            
+            # Track the pid of the process
+            subprocess_pid=$!
+            echo $subprocess_pid
+            wait $subprocess_pid
 
             # Handle any errors
-            if ! categorise_directory > $standard_output_file ; then
+            if [[ $? -ne 0 ]]; then
                 echo error found
                 handle_error $?
             fi
-            ls
+
+            # Handle argument parsed with flag
             case "${OPTARG}" in 
                 # Output results to terminal
                 "terminal" | "t" ) 
@@ -236,11 +248,13 @@ do
                 "file" | "f" ) 
                     echo "Please see $standard_output_file for your results." 
                     ;;
+
                 # Other argument
                 *) 
                     echo "Invalid flag. Your results are still available at $standard_output_file." 
                     ;;
             esac 
+
             ;;
 
         "u")  
@@ -248,37 +262,65 @@ do
             case "${OPTARG}" in 
                 1)  
                     # Generate a UUID version 1
-                    echo "Generating a unique UUID version 1"
-                    if ! this_uuid=$(generate_uuid_1); then
+                    echo "Generating a unique UUID version 1"                
+                    this_uuid=$(generate_uuid_1) &
+
+                    # Track the pid of the process
+                    subprocess_pid=$!
+                    wait $subprocess_pid
+
+                    # Handle any errors
+                    if [[ $? -ne 0 ]]; then
+                        echo error found
                         handle_error $?
                     fi
 
                     # If the UUID has been previously generated, generate a new one
-                    if [ -f "$uuid_record_file" ]; then
+                    if [ ! -f "$uuid_record_file" ]; then
                         while (grep "$this_uuid" $uuid_record_file)
                         do 
+                            # Re-generate UUID
                             echo Error: UUID generated already exists. Generating a new UUID...
-                            this_uuid=$(generate_uuid_1)
+                            this_uuid=$(generate_uuid_1) &
+
+                            # Track the pid of the process
+                            subprocess_pid=$!
+                            wait $subprocess_pid
+
+                            # Handle any errors
+                            if [[ $? -ne 0 ]]; then
+                                echo error found
+                                handle_error $?
+                            fi
                         done
                     fi
 
                     # Output the generated UUID
                     echo "${this_uuid}"
 
-                    # Save the generated UUID to records
+                    # Save the generated UUID to records and reset subprocess PID
                     echo "$(date) | ${this_uuid}" >> $uuid_record_file
+                    subprocess_pid=""
                     ;;
                 4)  
                     # Generate a UUID version 4
                     echo "Generating a unique UUID version 4"
-                    this_uuid=$(generate_uuid_4)
+                    this_uuid=$(generate_uuid_4) &
+
+                    # Track PID
+                    subprocess_pid=$!
+                    wait $subprocess_pid
+
+                    # No error handling for UUID version 4
 
                     # If the UUID has been previously generated, generate a new one 
-                    if [ -f "$uuid_record_file" ]; then
+                    if [[ -f "$uuid_record_file" ]]; then
                         while (grep "$this_uuid" $uuid_record_file)
                         do 
                             echo Error: UUID generated already exists. Generating a new UUID...
-                            this_uuid=$(generate_uuid_4)
+                            this_uuid=$(generate_uuid_4) &
+                            subprocess_pid=$!
+                            wait $subprocess_pid
                         done
                     fi
 
@@ -292,9 +334,14 @@ do
                 "last" | "l" )
                     # Get last generated UUID
                     echo "Getting the last generated UUID."
+                    this_uuid=$(get_last_uuid) &
+                    
+                    # Track PID
+                    subprocess_pid=$!
+                    wait $subprocess_pid
 
                     # Error handling
-                    if ! this_uuid=$(get_last_uuid); then
+                    if [[ $? -ne 0 ]]; then
                         handle_error $error_missing_uuid
                     fi
 
