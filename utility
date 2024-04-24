@@ -135,7 +135,7 @@ function handle_error()
 # UUID 1
 function generate_uuid_1()
 {
-    return 1
+    return 5
     # Get current date and UUID epoch date in 100ns intervals
     current_date=$(($(date +%s%N)/100))
     uuid_epoch=$(date -d "1582-10-15 00:00 UTC" +%s)
@@ -154,19 +154,22 @@ function generate_uuid_1()
     # Generate clock sequence
     clock_sequence=$(dd if=/dev/urandom count=2 bs=1 2> /dev/null | xxd -ps)
 
-    # Output UUID 1
-    echo "${uuid_date:7:8}-${uuid_date:3:4}-1${uuid_date:0:3}-${clock_sequence}-${mac_address}"
-}
-
-function generate_uuid_1_async()
-{
+    this_uuid="${uuid_date:7:8}-${uuid_date:3:4}-1${uuid_date:0:3}-${clock_sequence}-${mac_address}"
     
+    if [ -f "$uuid_record_file" ]; then
+        if  grep -q "$this_uuid" "$uuid_record_file"; then
+            return $error_repeated_uuid
+        fi
+    fi
+
+    # Output UUID 1
+    echo $this_uuid
+    echo "$(date) | ${this_uuid}" >> "$uuid_record_file"
 }
 
 # UUID 4
 function generate_uuid_4()
 {
-    return 4
     # Generate random numbers
     core_uuid=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
     byte_7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
@@ -180,8 +183,17 @@ function generate_uuid_4()
     byte_7=$(echo "ibase=10;obase=16;${byte_7}" | bc -l)
     byte_9=$(echo "ibase=10;obase=16;${byte_9}" | bc -l)
 
+    this_uuid="${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
+
+    if [ -f "$uuid_record_file" ]; then
+        if  grep -q "$this_uuid" "$uuid_record_file"; then
+            return $error_repeated_uuid
+        fi
+    fi
+
     # Output UUID 4
-    echo "${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
+    echo $this_uuid
+    echo "$(date) | ${this_uuid}" >> "$uuid_record_file"
 }
 
 # Get last generated UUID
@@ -231,6 +243,7 @@ do
     # Perform action based on flag
     case "${flag}" in
         c)
+        set -x
             # Categorise the directory (second bullet point)
             echo Categorising directory. Please wait...
             touch "${standard_output_file}"
@@ -271,76 +284,42 @@ do
             case "${OPTARG}" in 
                 1)  
                     # Generate a UUID version 1
-                    echo "Generating a unique UUID version 1"                
-                    this_uuid=$(generate_uuid_1 &)
-                    
-                    # Track PID
+                    echo "Generating a unique UUID version 1"   
+                    generate_uuid_1 &
+
                     subprocess_pid=$!
                     wait $subprocess_pid
                     error_code=$?
 
-                    # Handle any errors
-                    if [[ $error_code -ne 0 ]]; then
+                    while [ $error_code -ne 0 ]; do
                         handle_error $error_code
-                    fi
-
-                    set -x
-                    # If the UUID has been previously generated, generate a new one
-                    if [ -f "$uuid_record_file" ]; then
-                        while (grep -q "$this_uuid" "$uuid_record_file")
-                        do 
-                            # Re-generate UUID
-                            echo "Error: UUID generated already exists. Generating a new UUID..."
-                            this_uuid=$(generate_uuid_1 &)  # Assign the output to this_uuid
-                            
-                            # Track PID
-                            subprocess_pid=$!
-                            wait $subprocess_pid
-                            
-                            # Capture the error code into a variable
-                            error_code=$?
-                            
-                            # Handle any errors
-                            if [[ $error_code -ne 0 ]]; then
-                                handle_error $error_code
-                            fi
-                        done
-                    fi
-                    # Output the generated UUID
-                    echo "${this_uuid}"
-
-                    # Save the generated UUID to records and reset subprocess PID
-                    echo "$(date) | ${this_uuid}" >> "$uuid_record_file"
-                    subprocess_pid=""
+                        generate_uuid_1 &
+                    
+                        # Track PID
+                        subprocess_pid=$!
+                        wait $subprocess_pid
+                        error_code=$?
+                    done
                     ;;
                 4)  
                     # Generate a UUID version 4
                     echo "Generating a unique UUID version 4"
-                    this_uuid=$(generate_uuid_4 &)
+                    generate_uuid_4 &
                     
                     # Track PID
                     subprocess_pid=$!
                     wait $subprocess_pid
                     error_code=$?
 
-                    # No error handling for UUID version 4
-
-                    # If the UUID has been previously generated, generate a new one 
-                    if [[ -f "$uuid_record_file" ]]; then
-                        while (grep -q "$this_uuid" "$uuid_record_file")
-                        do 
-                            handle_error $error_repeated_uuid
-                            this_uuid=$(generate_uuid_4 &)
-                            subprocess_pid=$!
-                            wait $subprocess_pid
-                        done
-                    fi
-
-                    # Output the generated UUID
-                    echo "$this_uuid"
-
-                    # Save the generated UUID to records
-                    echo "$this_uuid" >> "$uuid_record_file"
+                    while [ $error_code -ne 0 ]; do
+                        handle_error $error_code
+                        generate_uuid_4 &
+                    
+                        # Track PID
+                        subprocess_pid=$!
+                        wait $subprocess_pid
+                        error_code=$?
+                    done
                     ;;
 
                 "last" | "l" )
