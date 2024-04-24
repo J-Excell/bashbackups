@@ -35,7 +35,7 @@ function categorise_directory()
 function get_file_types_and_sizes()
 {
     # Try to open the directory, if unable return error accessing directory
-    cd "$1" || return $error_accessing_directory
+    cd $1 || return $error_accessing_directory
 
     # Variable declaration
     declare -A file_sizes
@@ -77,7 +77,7 @@ function get_file_types_and_sizes()
 # For each child directory, find the shortest and largest length of a file name
 function get_file_names()
 {
-    cd "$1" || return $error_accessing_directory
+    cd $1 || return $error_accessing_directory
 
     echo -n "Largest file name: "
     find . -maxdepth 1 -type f | ls -A | \
@@ -99,7 +99,7 @@ function get_file_names()
 function handle_error()
 {
     user=$(whoami)
-    current_date_and_time="$(date)"
+    current_date_and_time=$(date)
 
     case $1 in
         $error_mac_address )
@@ -117,7 +117,6 @@ function handle_error()
         $error_wrong_num_args )
             echo "The program has not recieved the right amount of arguments (error code: $1)"
             echo "${current_date_and_time} | User: ${user} | Error code: $1 | Message: The program has not recieved the right amount of arguments." >> $log_file
-            exit $1
             ;;
         $error_repeated_uuid )
             echo "The UUID generated already exists. Retrying... (error code: $1)"
@@ -135,7 +134,6 @@ function handle_error()
 # UUID 1
 function generate_uuid_1()
 {
-    return 1
     # Get current date and UUID epoch date in 100ns intervals
     current_date=$(($(date +%s%N)/100))
     uuid_epoch=$(date -d "1582-10-15 00:00 UTC" +%s)
@@ -161,7 +159,6 @@ function generate_uuid_1()
 # UUID 4
 function generate_uuid_4()
 {
-    return 4
     # Generate random numbers
     core_uuid=$(dd if=/dev/urandom count=14 bs=1 2> /dev/null | xxd -ps)
     byte_7=$(dd if=/dev/urandom count=1 bs=1 2> /dev/null | xxd -ps) 
@@ -176,7 +173,7 @@ function generate_uuid_4()
     byte_9=$(echo "ibase=10;obase=16;${byte_9}" | bc -l)
 
     # Output UUID 4
-    this_uuid="${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
+    echo "${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
 }
 
 # Get last generated UUID
@@ -188,9 +185,12 @@ function get_last_uuid()
         echo "${last_uuid}"
         return 0
     else
+        echo "Could not generate UUID."
         return $error_missing_uuid
     fi
 }
+# Debug mode
+#set -x
 
 # Error codes
 error_accessing_directory=1
@@ -216,11 +216,11 @@ if [[ $# -ne 2 ]]; then
 fi
 
 # Flag handling
-while getopts 'c:u:l:' flag
+while getopts 'c:u:' flag
 do
     # Log user, time and the flags they used
-    user="$(whoami)"
-    current_date_and_time="$(date)"
+    user=$(whoami)
+    current_date_and_time=$(date)
     echo "${current_date_and_time} | ${user} used flag ${flag}" >> $log_file
     
     # Perform action based on flag
@@ -231,14 +231,13 @@ do
             touch "${standard_output_file}"
             categorise_directory > "$standard_output_file" &
             
-            # Track PID
+            # Track the pid of the process
             subprocess_pid=$!
             wait $subprocess_pid
-            error_code=$?
 
             # Handle any errors
-            if [[ $error_code -ne 0 ]]; then
-                handle_error $error_code
+            if [[ $? -ne 0 ]]; then
+                handle_error $?
             fi
 
             # Handle argument parsed with flag
@@ -265,7 +264,6 @@ do
             # Generate either a UUID version 1 or 4
             case "${OPTARG}" in 
                 1)  
-                    set -x
                     # Generate a UUID version 1
                     echo "Generating a unique UUID version 1"                
                     this_uuid=$(generate_uuid_1 &)
@@ -273,11 +271,10 @@ do
                     # Track PID
                     subprocess_pid=$!
                     wait $subprocess_pid
-                    error_code=$?
-
+                    
                     # Handle any errors
-                    if [[ $error_code -ne 0 ]]; then
-                        handle_error $error_code
+                    if [[ $? -ne 0 ]]; then
+                        handle_error $?
                     fi
 
                     # If the UUID has been previously generated, generate a new one
@@ -288,14 +285,13 @@ do
                             echo Error: UUID generated already exists. Generating a new UUID...
                             this_uuid=$(generate_uuid_1 &)
 
-                            # Track PID
+                            # Track the pid of the process
                             subprocess_pid=$!
                             wait $subprocess_pid
-                            error_code=$?
 
                             # Handle any errors
-                            if [[ $error_code -ne 0 ]]; then
-                                handle_error $error_code
+                            if [[ $? -ne 0 ]]; then
+                                handle_error $?
                             fi
                         done
                     fi
@@ -303,18 +299,17 @@ do
                     echo "${this_uuid}"
 
                     # Save the generated UUID to records and reset subprocess PID
-                    echo "$(date) | ${this_uuid}" >> "$uuid_record_file"
+                    echo "$(date) | ${this_uuid}" >> $uuid_record_file
                     subprocess_pid=""
                     ;;
                 4)  
                     # Generate a UUID version 4
                     echo "Generating a unique UUID version 4"
                     this_uuid=$(generate_uuid_4 &)
-                    
+
                     # Track PID
                     subprocess_pid=$!
                     wait $subprocess_pid
-                    error_code=$?
 
                     # No error handling for UUID version 4
 
@@ -333,22 +328,24 @@ do
                     echo "$this_uuid"
 
                     # Save the generated UUID to records
-                    echo "$this_uuid" >> "$uuid_record_file"
+                    echo "$this_uuid" >> $uuid_record_file
                     ;;
 
                 "last" | "l" )
                     # Get last generated UUID
                     echo "Getting the last generated UUID."
-                    get_last_uuid &
+                    this_uuid=$(get_last_uuid &)
                     
+                    # Track PID
                     subprocess_pid=$!
                     wait $subprocess_pid
-                    error_code=$?
 
-                    # Handle any errors
-                    if [[ $error_code -ne 0 ]]; then
-                        handle_error $error_code
+                    # Error handling
+                    if [[ $? -ne 0 ]]; then
+                        handle_error $error_missing_uuid
                     fi
+
+                    echo "$this_uuid"
                     ;;
                 *)  
                     echo "${OPTARG} is not a supported UUID."
