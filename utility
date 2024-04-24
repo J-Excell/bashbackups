@@ -158,6 +158,11 @@ function generate_uuid_1()
     echo "${uuid_date:7:8}-${uuid_date:3:4}-1${uuid_date:0:3}-${clock_sequence}-${mac_address}"
 }
 
+function generate_uuid_1_async()
+{
+    
+}
+
 # UUID 4
 function generate_uuid_4()
 {
@@ -176,7 +181,7 @@ function generate_uuid_4()
     byte_9=$(echo "ibase=10;obase=16;${byte_9}" | bc -l)
 
     # Output UUID 4
-    this_uuid="${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
+    echo "${core_uuid:0:8}-${core_uuid:8:4}-${byte_7,,}${core_uuid:12:2}-${byte_9,,}${core_uuid:14:2}-${core_uuid:16:12}"
 }
 
 # Get last generated UUID
@@ -265,7 +270,6 @@ do
             # Generate either a UUID version 1 or 4
             case "${OPTARG}" in 
                 1)  
-                    set -x
                     # Generate a UUID version 1
                     echo "Generating a unique UUID version 1"                
                     this_uuid=$(generate_uuid_1 &)
@@ -280,19 +284,22 @@ do
                         handle_error $error_code
                     fi
 
+                    set -x
                     # If the UUID has been previously generated, generate a new one
                     if [ -f "$uuid_record_file" ]; then
                         while (grep -q "$this_uuid" "$uuid_record_file")
                         do 
                             # Re-generate UUID
-                            echo Error: UUID generated already exists. Generating a new UUID...
-                            this_uuid=$(generate_uuid_1 &)
-
+                            echo "Error: UUID generated already exists. Generating a new UUID..."
+                            this_uuid=$(generate_uuid_1 &)  # Assign the output to this_uuid
+                            
                             # Track PID
                             subprocess_pid=$!
                             wait $subprocess_pid
+                            
+                            # Capture the error code into a variable
                             error_code=$?
-
+                            
                             # Handle any errors
                             if [[ $error_code -ne 0 ]]; then
                                 handle_error $error_code
