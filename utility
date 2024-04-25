@@ -5,7 +5,7 @@
 function categorise_directory()
 {
     # Try to open the directory, if unable return error accessing directory
-    cd "$starting_directory" || return $error_accessing_directory
+    cd "$first_directory" || return $error_accessing_directory
     
     for directory in $(find . -type d)
     do
@@ -24,9 +24,9 @@ function categorise_directory()
         fi
         echo 
     done
-
     cd .. || return $error_accessing_directory
-    return 0
+    
+    return $no_error
 }
 
 # For each child directory, report how many of each file type there are and
@@ -71,7 +71,7 @@ function get_file_types_and_sizes()
     # Try to exit the current folder and go back to previous, if unable then return
     # error accessing directory
     cd - > /dev/null || return $error_accessing_directory
-    return 0
+    return $no_error
 }
 
 # For each child directory, find the shortest and largest length of a file name
@@ -92,12 +92,13 @@ function get_file_names()
     # Try to exit the current folder and go back to previous, if unable then return
     # error accessing directory
     cd - > /dev/null || return $error_accessing_directory
-    return 0
+    return $no_error
 }
 
 # Handling errors produced by other functions
 function handle_error()
 {
+    cd $original_directory
     user=$(whoami)
     current_date_and_time="$(date)"
 
@@ -122,7 +123,7 @@ function handle_error()
         $error_repeated_uuid )
             echo "The UUID generated already exists. Retrying... (error code: $1)"
             echo "${current_date_and_time} | User: ${user} | Error code: $1 | Message: The UUID generated already exists." >> $log_file
-            return 0 # Retry rather than exiting the program
+            return $no_error # Retry rather than exiting the program
             ;;
         *)
             echo "An unknown error has occured. Please try again."
@@ -135,7 +136,6 @@ function handle_error()
 # UUID 1
 function generate_uuid_1()
 {
-    return 5
     # Get current date and UUID epoch date in 100ns intervals
     current_date=$(($(date +%s%N)/100))
     uuid_epoch=$(date -d "1582-10-15 00:00 UTC" +%s)
@@ -165,6 +165,7 @@ function generate_uuid_1()
     # Output UUID 1
     echo $this_uuid
     echo "$(date) | ${this_uuid}" >> "$uuid_record_file"
+    return $no_error
 }
 
 # UUID 4
@@ -194,6 +195,7 @@ function generate_uuid_4()
     # Output UUID 4
     echo $this_uuid
     echo "$(date) | ${this_uuid}" >> "$uuid_record_file"
+    return $no_error
 }
 
 # Get last generated UUID
@@ -203,13 +205,14 @@ function get_last_uuid()
     if [ -f "$uuid_record_file" ]; then
         last_uuid=$(tail -n 1 $uuid_record_file)
         echo "${last_uuid}"
-        return 0
+        return $no_error
     else
         return $error_missing_uuid
     fi
 }
 
 # Error codes
+no_error=0
 error_accessing_directory=1
 error_mac_address=2
 error_missing_uuid=3
@@ -217,7 +220,8 @@ error_wrong_num_args=4
 error_repeated_uuid=5
 
 # Directories and files
-starting_directory="_Directory"
+original_directory=$(pwd)
+first_directory="_Directory"
 log_file="history.log"
 standard_output_file="directory_information.txt"
 uuid_record_file="uuid_history.txt"
@@ -243,12 +247,10 @@ do
     # Perform action based on flag
     case "${flag}" in
         c)
-        set -x
             # Categorise the directory (second bullet point)
             echo Categorising directory. Please wait...
             touch "${standard_output_file}"
             categorise_directory > "$standard_output_file" &
-            
             # Track PID
             subprocess_pid=$!
             wait $subprocess_pid

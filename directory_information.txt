@@ -1,1 +1,31 @@
 ./subdirectory_5
+empty total size:  0 bytes (0 kilobytes)
+empty total count: 24
+PNG total size:  1444760 bytes (1444 kilobytes)
+PNG total count: 20
+JPEG total size:  451800 bytes (451 kilobytes)
+JPEG total count: 15
+Bourne-Again total size:  273 bytes (0 kilobytes)
+Bourne-Again total count: 13
+data total size:  14742 bytes (14 kilobytes)
+data total count: 42
+Total folder size used: 1909K
+Largest file name: 21 characters (Qj9FXIE8Z2hoNjrbs.dat)
+Smallest file name: 6 characters (fgs.sh)
+
+./subdirectory_5/subsubdirectory_5
+empty total size:  0 bytes (0 kilobytes)
+empty total count: 24
+PNG total size:  2094902 bytes (2094 kilobytes)
+PNG total count: 29
+JPEG total size:  542160 bytes (542 kilobytes)
+JPEG total count: 18
+Bourne-Again total size:  399 bytes (0 kilobytes)
+Bourne-Again total count: 19
+data total size:  17199 bytes (17 kilobytes)
+data total count: 49
+Total folder size used: 2653K
+Largest file name: 21 characters (YkA3uFOGD53Yj4Yep.png)
+Smallest file name: 6 characters (FI9.sh)
+
+./subdirectory_5/subsubdirectory_2
