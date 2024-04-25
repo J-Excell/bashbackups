@@ -29,3 +29,63 @@ Largest file name: 21 characters (YkA3uFOGD53Yj4Yep.png)
 Smallest file name: 6 characters (FI9.sh)
 
 ./subdirectory_5/subsubdirectory_2
+empty total size:  0 bytes (0 kilobytes)
+empty total count: 30
+PNG total size:  1300284 bytes (1300 kilobytes)
+PNG total count: 18
+JPEG total size:  662640 bytes (662 kilobytes)
+JPEG total count: 22
+Bourne-Again total size:  336 bytes (0 kilobytes)
+Bourne-Again total count: 16
+data total size:  16497 bytes (16 kilobytes)
+data total count: 47
+Total folder size used: 1978K
+Largest file name: 21 characters (SGDne90MtSgyf1FuR.jpg)
+Smallest file name: 6 characters (ec2.sh)
+
+./subdirectory_5/subsubdirectory_4
+empty total size:  0 bytes (0 kilobytes)
+empty total count: 21
+PNG total size:  1516998 bytes (1516 kilobytes)
+PNG total count: 21
+JPEG total size:  451800 bytes (451 kilobytes)
+JPEG total count: 15
+Bourne-Again total size:  525 bytes (0 kilobytes)
+Bourne-Again total count: 25
+data total size:  15444 bytes (15 kilobytes)
+data total count: 44
+Total folder size used: 1982K
+Largest file name: 21 characters (ZBkjQy7Okwdp1icKn.png)
+Smallest file name: 6 characters (faB.sh)
+
+./subdirectory_5/subsubdirectory_1
+empty total size:  0 bytes (0 kilobytes)
+empty total count: 16
+PNG total size:  1228046 bytes (1228 kilobytes)
+PNG total count: 17
+JPEG total size:  602400 bytes (602 kilobytes)
+JPEG total count: 20
+Bourne-Again total size:  399 bytes (0 kilobytes)
+Bourne-Again total count: 19
+data total size:  15795 bytes (15 kilobytes)
+data total count: 45
+Total folder size used: 1845K
+Largest file name: 21 characters (YGUNJ3Ww1tXiLgYPO.dat)
+Smallest file name: 6 characters (XgD.sh)
+
+./subdirectory_5/subsubdirectory_3
+empty total size:  0 bytes (0 kilobytes)
+empty total count: 17
+PNG total size:  1950426 bytes (1950 kilobytes)
+PNG total count: 27
+JPEG total size:  542160 bytes (542 kilobytes)
+JPEG total count: 18
+Bourne-Again total size:  462 bytes (0 kilobytes)
+Bourne-Again total count: 22
+data total size:  15093 bytes (15 kilobytes)
+data total count: 43
+Total folder size used: 2507K
+Largest file name: 21 characters (yjLpBKH4oFvXGNKNo.png)
+Smallest file name: 6 characters (5Oj.sh)
+
+./subdirectory_2
