@@ -246,12 +246,10 @@ main_pid=$$
 subprocess_pid=""
 
 # Check only 1 flag and argument supplied
-if [[ $# -ne 2 ]]; then 
-    handle_error $error_wrong_num_args
-fi
+if [[ $# -ne 2 ]]; then handle_error $error_wrong_num_args; fi
 
 # Flag handling
-while getopts 'c:u:l:' flag
+while getopts 'c:u:' flag
 do
     # Log user, time and the flags they used
     user="$(whoami)"
@@ -273,21 +271,19 @@ do
             error_code=$?
 
             # Handle any errors
-            if [[ $error_code -ne 0 ]]; then
-                handle_error $error_code
-            fi
+            if [[ $error_code -ne 0 ]]; then handle_error $error_code; fi
 
             # Handle argument parsed with flag
             case "${OPTARG}" in
 
                 # Output results to terminal
-                "terminal" | "t" ) cat "$directory_information_file" ;;
+                "terminal" | "t" ) cat "$directory_information_file";;
 
                 # Only save results to file
-                "file" | "f" ) echo "Please see $directory_information_file for your results." ;;
+                "file" | "f" ) echo "Please see $directory_information_file for your results.";;
 
                 # Other argument
-                *) handle_error $error_invalid_arg_or_flag; echo "Your results are still available at $directory_information_file." ;;
+                *) handle_error $error_invalid_arg_or_flag; echo "Your results are still available at $directory_information_file.";;
 
             esac 
             ;;
@@ -349,17 +345,13 @@ do
                     error_code=$?
 
                     # Handle any errors produced
-                    if [[ $error_code -ne 0 ]]; then
-                        handle_error $error_code
-                    fi
+                    if [[ $error_code -ne 0 ]]; then handle_error $error_code; fi
                     ;;
-                *)  
-                    handle_error $error_invalid_arg_or_flag
-                    ;;
+
+                *) handle_error $error_invalid_arg_or_flag;;
             esac
             ;;
-        *)  
-            handle_error $error_invalid_arg_or_flag
-            ;;
+
+        *) handle_error $error_invalid_arg_or_flag;;
     esac
 done
